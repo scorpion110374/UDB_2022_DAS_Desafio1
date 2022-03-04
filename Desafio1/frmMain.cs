@@ -4,36 +4,19 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using Desafio1;
 
 namespace Desafio1
 {
     public partial class frmMain : Form
     {
-        //Set username & password
-        string usr = "eduardot";
-        string pwd = "123456";
-
-        public class Usuario
-        {
-            public string User { get; set; }
-            public string Clave { get; set; }
-            public string Categoria { get; set; }
-            public Usuario() { }
-            public Usuario(string usuario,string clave,string categoria)
-            {
-                User = usuario;
-                Clave = clave;
-                Categoria = categoria;
-            }
-        }
-
         //Declarar lista de usuarios
-        //List<Usuario> lstUsuarios = new List<Usuario>();
         public static List<Usuario> lstUsuarios = new List<Usuario>();
 
         //Declarar categoria de usuario
@@ -44,10 +27,86 @@ namespace Desafio1
             InitializeComponent();
         }
 
+
+        public bool Login(string usr, string pass)
+        {
+            if (usr == "" || pass == "")
+            {
+                //Mensaje de error si los cambos de usuario y contraseña no son completados
+                MessageBox.Show("Favor ingresar usuario y contraseña!", "Advertencia", MessageBoxButtons.OK);
+                return false;
+            }
+            else if ((usr != "" || pass != ""))
+            {
+                var usrFound = lstUsuarios;
+                return usrFound.Any(Usuario => Usuario.User == usr && Usuario.Clave == pass);
+            }
+            return false;
+        }
+        private void frmMain_Load(object sender, EventArgs e)
+        {
+            //Instanciar usuarios predeterminados
+            lstUsuarios.Add(new Usuario("eduardot", "123456", "Transporte"));
+            lstUsuarios.Add(new Usuario("etrujillo", "123456", "Población"));
+            lstUsuarios.Add(new Usuario("luist", "123456", "Transporte"));
+            lstUsuarios.Add(new Usuario("armandot", "123456", "Población"));
+            lstUsuarios.Add(new Usuario("fatimat", "123456", "Transporte"));
+        }
+
+        private void linkRegistro_Click(object sender, EventArgs e)
+        {
+            //Mostrar controles de registro
+            lblNuevoUsuario.Show();
+            lblNuevoPassword.Show();
+            lblCategoria.Show();
+            txtNuevoUsuario.Show();
+            txtNuevoPassword.Show();
+            cbNuevaCategoria.Show();
+            btnRegistro.Show();
+        }
+
+
+        private void btnRegistro_Click(object sender, EventArgs e)
+        {
+            if (txtNuevoUsuario.Text == "" || txtNuevoPassword.Text == "" || cbNuevaCategoria.Text == "")
+            {
+                //Mensaje de error si los cambos de usuario y contraseña no son completados
+                MessageBox.Show("Favor llenar los 3 campos de registro requeridos!", "Advertencia", MessageBoxButtons.OK);
+            }
+            else
+            {
+                var usrFound = lstUsuarios;
+                if (usrFound.Any(Usuario => Usuario.User == txtNuevoUsuario.Text))
+                {
+                    MessageBox.Show("Este nombre de usuario ya existe en el sistema, favor seleccione uno diferente!", "Advertencia", MessageBoxButtons.OK);
+                }
+                else
+                {
+                    //Agregar nuevo usuario
+                    lstUsuarios.Add(new Usuario(txtNuevoUsuario.Text, txtNuevoPassword.Text, cbNuevaCategoria.Text));
+                    //Ocultar controles de registro
+                    txtUsername.Text = "";
+                    txtPassword.Text = "";
+                    lblNuevoUsuario.Hide();
+                    lblNuevoPassword.Hide();
+                    lblCategoria.Hide();
+                    txtNuevoUsuario.Hide();
+                    txtNuevoPassword.Hide();
+                    cbNuevaCategoria.Hide();
+                    btnRegistro.Hide();
+                    MessageBox.Show("Usuario registrado exitosamente!", "Advertencia", MessageBoxButtons.OK);
+                }
+            }
+        }
+
+
         private void btnLogin_Click(object sender, EventArgs e)
         {
             if (Login(txtUsername.Text, txtPassword.Text))
             {
+                var usrFound = lstUsuarios;
+                //Gardar categoria de usuario validado
+                catSelected = usrFound.Where(Usuario => Usuario.User == txtUsername.Text && Usuario.Clave == txtPassword.Text).Select(Usuario => Usuario.Categoria).SingleOrDefault();
                 //Ocultar objetos de inicio si login es validado
                 pbLogin.Hide();
                 lblUsername.Hide();
@@ -56,15 +115,39 @@ namespace Desafio1
                 txtPassword.Hide();
                 btnLogin.Hide();
                 linkRegistro.Hide();
+                //Ocultar controles de registro
+                lblNuevoUsuario.Hide();
+                lblNuevoPassword.Hide();
+                lblCategoria.Hide();
+                txtNuevoUsuario.Hide();
+                txtNuevoPassword.Hide();
+                cbNuevaCategoria.Hide();
+                btnRegistro.Hide();
                 //Mostrar el Tab control
                 tabControl1.Show();
                 btnCerrar.Show();
 
 
                 //Cargar informacion a ser mostrada segun categoria de usuario
+                //Si categoria de interes del usuario es Transporte
                 if (catSelected == "Transporte")
                 {
-                    //declarar datos 2020
+                    //llenar informacion a tab1
+                    txtTitle.Text = "PARQUE VEHICULAR EN EL SALVADOR";
+                    FileStream fs = new System.IO.FileStream(@"..\..\images\transporte.jpg", FileMode.Open, FileAccess.Read);
+                    pictureBox1.Image = Image.FromStream(fs);
+                    pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                    fs.Close();
+                    txtMainInfo.Text = "En San Salvador, los automovilistas realizan diariamente 2,500,000 viajes y circulan en velocidades inferiores a los 20 kilómetros por hora, según un estudio de BID" + "\r\n" +
+                                        "Por las calles y carreteras del país circulan 1,412,393 de automotores, según datos oficiales. Si esa cantidad de automotores se repartiera equitativamente entre las familias(1, 871, 468), significaría que ocho de cada diez familias poseerían uno." + "\r\n" +
+                                        "Pero la distribución no es de esa forma y dentro de ese casi millón y medio hay un millón de vehículos particulares, más de 5,000 de alquiler, 500,000 motocicletas y más 12,932 vehículos propiedad del Gobierno, y así continúa el conteo." + "\r\n" +
+                                        "La lista de vehículos matriculados crece diariamente.El estimado mensual oscila entre 8,879." + "\r\n" +
+                                        "Según los datos del Viceministerio de Transporte(VMT)en el departamento de San Salvador circulan 512,381 de automotores; la cifra no es de extrañar si tomamos en cuenta la cantidad de habitantes(2,750,000) y la concentración de actividad económica." + "\r\n" +
+                                        "Las cifras también son importantes en los departamentos de la Libertad con 185,380 vehículos; 118, 852 en Santa Ana y 109, 727 en San Miguel." +
+                                        "Las 10 departamentos restantes tienen un registro menor a 80,000 cada uno." + "\r\n" +
+                                        "Por las calles y carreteras del país circulan 1,412,393 de automotores, según datos oficiales. Si esa cantidad de automotores se repartiera equitativamente entre las familias(1, 871, 468), significaría que ocho de cada diez familias poseerían uno.";
+
+                    //declarar datos 2020, tab2 y tab3
                     //Declarar instancia del objeto datatable
                     DataTable table = new DataTable();
                     //Agregar columnas con su respectivo nombre
@@ -232,6 +315,7 @@ namespace Desafio1
                         }
                     }
 
+                    // Generar graficos en tab4
                     //Grafico $ 1
                     chart1.DataSource = table.Select("Depto not like 'V.TOTALES'");
                     chart1.Series["Series1"].XValueMember = "Depto";
@@ -249,82 +333,103 @@ namespace Desafio1
                     chart2.Series["Series1"].IsValueShownAsLabel = false;
 
 
+                }else
+                {
+                    //Si categoria de interes del usuario es Transporte
+                    //llenar informacion a tab1
+                    txtTitle.Text = "POBLACIÓN DE EL SALVADOR";
+                    FileStream fs = new System.IO.FileStream(@"..\..\images\censo.jpg", FileMode.Open, FileAccess.Read);
+                    pictureBox1.Image = Image.FromStream(fs);
+                    pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                    fs.Close();
+                    txtMainInfo.Text = "El Salvador está en el puesto 112 de los 196 estados que componen la tabla de población mundial de datosmacro.com."+"\r\n"+
+                                       "Tan solo un 0,66 % de la población de El Salvador son inmigrantes, según los últimos datos de inmigración publicados por la ONU. El Salvador es el 166º país del mundo por porcentaje de inmigración."+"\r\n"+
+                                       "El Salvador se encuentra en la 167ª posición de la tabla de densidad, así pues, tiene una alta densidad de población, de 308 habitantes por Km2.";
+
+                    //declarar datos , tab2 y tab3
+                    //Declarar instancia del objeto datatable
+                    DataTable table = new DataTable();
+                    //Agregar columnas con su respectivo nombre
+                    table.Columns.Add("Anio", typeof(string));
+                    table.Columns.Add("Densidad", typeof(int));
+                    table.Columns.Add("Hombres", typeof(int));
+                    table.Columns.Add("Mujeres", typeof(int));
+                    table.Columns.Add("Población", typeof(int));
+
+                    //Agregar filas
+                    table.Rows.Add("2020", "308", "3036424", "3449777", "6486201");
+                    table.Rows.Add("2019", "307", "3023353", "3430197", "6454000");
+                    table.Rows.Add("2018", "305", "3010428", "3410312", "6421000");
+                    table.Rows.Add("2017", "304", "2997810", "3390314", "6388000");
+                    table.Rows.Add("2016", "302", "2985690", "3370447", "6356000");
+                    table.Rows.Add("2015", "301", "2974229", "3350892", "6325000");
+                    table.Rows.Add("2014", "299", "2963437", "3331687", "6295000");
+                    table.Rows.Add("2013", "298", "2953270", "3312806", "6266000");
+                    table.Rows.Add("2012", "296", "2943739", "3294183", "6238000");
+                    table.Rows.Add("2011", "295", "2934825", "3275742", "6211000");
+
+
+                    //Ordenar datos de forma ascendente con respecto a columna "Depto."
+                    table.DefaultView.Sort = "Anio DESC";
+                    //Cargar datos a dataview
+                    dgDatos2020.DataSource = table;
+
+                    //Ocultar datagrid2
+                    dgDatos2021.Hide();
+
+
+                    // Generar graficos en tab4
+                    //Grafico $ 1
+                    chart1.DataSource = table;
+                    chart1.Series["Series1"].XValueMember = "Anio";
+                    chart1.Series["Series1"].YValueMembers = "Población";
+                    chart1.Titles.Add("Población por año");
+                    chart1.Series["Series1"].ChartType = SeriesChartType.Pie;
+                    chart1.Series["Series1"].IsValueShownAsLabel = false;
+
+                    //Grafico $ 2
+                    chart2.DataSource = table;
+                    chart2.Series["Series1"].XValueMember = "Anio";
+                    chart2.Series["Series1"].YValueMembers = "Hombres";
+                    //chart2.Series["Series2"].XValueMember = "Anio";
+                    chart2.Series["Series2"].YValueMembers = "Mujeres";
+                    chart2.Titles.Add("Gráfico por Género");
+                    chart2.Series["Series1"].ChartType = SeriesChartType.Column;
+                    chart2.Series["Series1"].IsValueShownAsLabel = false;
+                    chart2.Series["Series2"].ChartType = SeriesChartType.Column;
+                    chart2.Series["Series2"].IsValueShownAsLabel = false;
                 }
+                //Si categoria de interes del usuario es Poblacion
             }
             else {
                 //Mensaje si credenciales invalidas
-                MessageBox.Show("Credenciales invalidas!", "Advertencia", MessageBoxButtons.OK);
+                MessageBox.Show("Credenciales invalidas o usuario no esta registrado!", "Advertencia", MessageBoxButtons.OK);
             };
         }
 
             private void btnCerrar_Click(object sender, EventArgs e)
         {
-            Application.Exit();
-        }
-
-        public bool Login(string usr, string pass)
-        {
-            if (usr == "" || pass == "")
-            {
-                //Mensaje de error si los cambos de usuario y contraseña no son completados
-                MessageBox.Show("Favor ingresar usuario y contraseña!", "Advertencia", MessageBoxButtons.OK);
-                return false;
-            }
-            else if((usr != "" || pass != ""))
-            {
-                var usrFound = lstUsuarios;
-                catSelected = usrFound.Where(Usuario => Usuario.User == usr && Usuario.Clave == pass).Select(Usuario => Usuario.Categoria).SingleOrDefault();
-                return usrFound.Any(Usuario => Usuario.User == usr && Usuario.Clave == pass);
-                return false;
-            }
-            return false;
-        }
-        private void frmMain_Load(object sender, EventArgs e)
-        {
-            //Instanciar usuarios predeterminados
-            lstUsuarios.Add(new Usuario("eduardot", "123456", "Transporte"));
-        }
-
-        private void linkRegistro_Click(object sender, EventArgs e)
-        {
-            //Mostrar controles de registro
-            lblNuevoUsuario.Show();
-            lblNuevoPassword.Show();
-            lblCategoria.Show();
-            txtNuevoUsuario.Show();
-            txtNuevoPassword.Show();
-            cbNuevaCategoria.Show();
-            btnRegistro.Show();
-        }
-
-        private void btnRegistro_Click(object sender, EventArgs e)
-        {
-            if (txtNuevoUsuario.Text == "" || txtNuevoPassword.Text == "" || cbNuevaCategoria.Text == "")
-            {
-                //Mensaje de error si los cambos de usuario y contraseña no son completados
-                MessageBox.Show("Favor llenar los 3 campos de registro requeridos!", "Advertencia", MessageBoxButtons.OK);
-            }
-            else {
-                var usrFound = lstUsuarios;
-                if(usrFound.Any(Usuario => Usuario.User == txtNuevoUsuario.Text))
-                {
-                    MessageBox.Show("Este nombre de usuario ya existe en el sistema, favor seleccione uno diferente!", "Advertencia", MessageBoxButtons.OK);
-                }
-                else
-                {
-                    //Instanciar usuarios predeterminados
-                    lstUsuarios.Add(new Usuario(txtNuevoUsuario.Text, txtNuevoPassword.Text, cbNuevaCategoria.Text));
-                    //Mostrar controles de registro
-                    lblNuevoUsuario.Hide();
-                    lblNuevoPassword.Hide();
-                    lblCategoria.Hide();
-                    txtNuevoUsuario.Hide();
-                    txtNuevoPassword.Hide();
-                    cbNuevaCategoria.Hide();
-                    btnRegistro.Hide();
-                    MessageBox.Show("Usuario registrado exitosamente!", "Advertencia", MessageBoxButtons.OK);
-                }
-            }
+            //Ocultar objetos de inicio si login es validado
+            pbLogin.Show();
+            lblUsername.Show();
+            lblPassword.Show();
+            txtUsername.Text = "";
+            txtUsername.Show();
+            txtPassword.Text = "";
+            txtPassword.Show();
+            btnLogin.Show();
+            linkRegistro.Show();
+            //Ocultar controles de registro
+            lblNuevoUsuario.Hide();
+            lblNuevoPassword.Hide();
+            lblCategoria.Hide();
+            txtNuevoUsuario.Hide();
+            txtNuevoPassword.Hide();
+            cbNuevaCategoria.Hide();
+            btnRegistro.Hide();
+            //Mostrar el Tab control
+            tabControl1.Hide();
+            btnCerrar.Hide();
         }
     }
 }
